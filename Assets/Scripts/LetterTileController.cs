@@ -3,11 +3,21 @@ using System.Collections;
 
 public class LetterTileController : MonoBehaviour {
 
-  public char typeOfLetter;
-  public SpriteRenderer letter;
+  public SpriteRenderer letterSprite;
+  public GameLevelController game;
 
-  public void SetLetterSprite (Sprite chosenLetter)
+  [HideInInspector]
+  public char letter;
+
+  public void SetLetterTileLetter (char chosenLetter)
   {
-    letter.sprite = chosenLetter;
+    Sprite newLetterSprite = Resources.Load<Sprite>("Sprites/Letter" + chosenLetter);
+    letterSprite.sprite = newLetterSprite;
+    letter = chosenLetter;
+  }
+
+  void OnMouseUp()
+  {
+    game.InputRegistered(letter);
   }
 }
