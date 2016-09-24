@@ -2,17 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-
+using System.IO;
 
 public class WordData : MonoBehaviour
 {
 
-  //  public WordGame game;
+  public GameLevelController game;
 
-  //  [HideInInspector]
-  //  public Dictionary<char, List<string>> wordsMap;
+  [HideInInspector]
+  public Dictionary<char, List<string>> wordsMap;
 
-  //  private List<string> allWords;
+  //private List<string> allWords;
 
   //  private List<string> allWordsUnique;
 
@@ -30,112 +30,50 @@ public class WordData : MonoBehaviour
   //    return false;
   //  }
 
-  //  public string GetRandomWord(int len = 0)
-  //  {
-  //    if (len != 0)
-  //    {
 
-  //      while (true)
-  //      {
-  //        var i = Random.Range(0, allWordsUnique.Count);
-  //        var w = allWordsUnique[i].TrimEnd();
-  //        w = w.TrimStart();
-  //        allWordsUnique.RemoveAt(i);
-  //        if (w.Length == len)
-  //        {
-  //          return w;
-  //        }
-  //      }
-  //    }
+  void Start()
+  {
+    wordsMap = new Dictionary<char, List<string>>();
+    StartCoroutine("LoadWordData");
+  }
 
-  //    var index = Random.Range(0, allWordsUnique.Count);
-  //    var word = allWordsUnique[index].TrimEnd();
-  //    word = word.TrimStart();
-  //    allWordsUnique.RemoveAt(index);
-  //    return word;
-  //  }
+  void LoadWordData()
+  {
 
-  //  void Start()
-  //  {
-  //    wordsMap = new Dictionary<char, List<string>>();
-  //    StartCoroutine("LoadWordData");
-  //  }
+    string filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "SortedWordList.txt");
 
-  //  IEnumerator LoadWordData()
-  //  {
+    string result = null;
 
-  //    string filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "words.txt");
+    result = File.ReadAllText(filePath);
 
-  //    string result = null;
+    ProcessWordSource(result);
 
-  //    if (filePath.Contains("://"))
-  //    {
-  //      WWW www = new WWW(filePath);
-  //      yield return www;
-  //      result = www.text;
-  //    }
-  //    else
-  //      result = System.IO.File.ReadAllText(filePath);
+    filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "commonWords.txt");
 
-  //    ProcessWordSource(result);
+    game.InitGame();
+  }
 
+  void ProcessWordSource(string data)
+  {
+    var words = data.Split('\n');
+    foreach (var word in words)
+    {
+      //Stores words by their first letter in a Dictionary of lists
+      var c = word[0];
+      if (!wordsMap.ContainsKey(c))
+      {
+        wordsMap.Add(c, new List<string>());
+      }
+      wordsMap[c].Add(word.TrimEnd());
+    }
+  }
 
-  //    filePath = System.IO.Path.Combine(Application.streamingAssetsPath, "commonWords.txt");
+  public bool IsWordValid(string wordToTest)
+  {
+    List<string> wordsByLetter;
+    if (wordsMap.TryGetValue(wordToTest[0], out wordsByLetter))
+      return wordsByLetter.Contains(wordToTest);
 
-  //    result = null;
-
-  //    if (filePath.Contains("://"))
-  //    {
-  //      WWW www = new WWW(filePath);
-  //      yield return www;
-  //      result = www.text;
-  //    }
-  //    else
-  //      result = System.IO.File.ReadAllText(filePath);
-
-
-  //    ProcessWordData(result);
-
-  //    game.InitGame();
-  //  }
-
-  //  void ProcessWordSource(string data)
-  //  {
-  //    var words = data.Split('\n');
-  //    foreach (var entry in words)
-  //    {
-  //      var c = entry[0];
-  //      if (!wordsMap.ContainsKey(c))
-  //      {
-  //        wordsMap.Add(c, new List<string>());
-  //      }
-  //      wordsMap[c].Add(entry.TrimEnd());
-  //    }
-  //  }
-
-  //  void ProcessWordData(string data)
-  //  {
-  //    var words = data.Split('\n');
-  //    allWords = new List<string>(words);
-
-  //    ShuffleList(allWords);
-
-  //    allWordsUnique = new List<string>();
-  //    allWordsUnique.AddRange(allWords);
-  //  }
-
-
-  //  private static System.Random random = new System.Random();
-
-  //  public static void ShuffleList<T>(List<T> array)
-  //  {
-  //    int n = array.Count;
-  //    for (int i = 0; i < n; i++)
-  //    {
-  //      int r = i + (int)(random.NextDouble() * (n - i));
-  //      T t = array[r];
-  //      array[r] = array[i];
-  //      array[i] = t;
-  //    }
-  //  }
+    return false;
+  }
 }

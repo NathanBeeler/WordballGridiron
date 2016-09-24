@@ -20,7 +20,7 @@ public class Grid : MonoBehaviour
     LetterTileController lt = Instantiate(letterTilePrefab, new Vector3(x, y, 0), transform.rotation) as LetterTileController;
     lt.transform.position.Set(x, y, 0);
     lt.SetLetterTileLetter(letter);
-    lt.game = game;
+    //lt.game = game;
     return lt;
   }
 

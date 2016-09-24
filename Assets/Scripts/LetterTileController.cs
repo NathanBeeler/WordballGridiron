@@ -4,7 +4,7 @@ using System.Collections;
 public class LetterTileController : MonoBehaviour {
 
   public SpriteRenderer letterSprite;
-  public GameLevelController game;
+  //public GameLevelController game;
 
   [HideInInspector]
   public char letter;
@@ -16,8 +16,9 @@ public class LetterTileController : MonoBehaviour {
     letter = chosenLetter;
   }
 
-  void OnMouseUp()
-  {
-    game.InputRegistered(letter);
-  }
+  ////Really want this on mouse up, but that oddly still selects the collision where the mouse down occurred
+  //void OnMouseDown()
+  //{
+  //  game.InputRegistered(letter);
+  //}
 }
