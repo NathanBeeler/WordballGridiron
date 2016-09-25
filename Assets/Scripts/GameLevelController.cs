@@ -8,6 +8,13 @@ public class GameLevelController : MonoBehaviour {
   public Grid currentGrid;
   public WordData wordData;
 
+  private List<char> _currentWord { get; set; }
+
+  public GameLevelController()
+  {
+    _currentWord = new List<char>();
+  }
+
   //For both hike and clearwords, need to clear away selected words
   public void Hike()
   {

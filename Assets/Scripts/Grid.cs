@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class Grid : MonoBehaviour
 {
-  public int xGridSize;
+  public int xVisibleGridSize;
+  public int xFullGridSize;
   public int yGridSize;
   public float xStepSize;
   public float yStepSize;
@@ -13,7 +14,33 @@ public class Grid : MonoBehaviour
   public LetterTileController letterTilePrefab;
   public GameLevelController game;
 
-  private List<List<LetterTileController>> letterGrid;
+  private LetterTileController[,] visibleLetterGrid;
+  private char[,] fullLetterGrid;
+  private float[] _frequencies =
+  {
+    8.167f, 1.492f, 2.782f, 4.253f, 12.702f,
+    2.228f, 2.015f, 6.094f, 6.966f, 0.153f,
+    0.772f, 4.025f, 2.406f, 6.749f, 7.507f,
+    1.929f, 0.095f, 5.987f, 6.327f, 9.056f,
+    2.758f, 0.978f, 2.360f, 0.150f, 1.974f,
+    0.074f
+  };
+  private int int_A = (int)'A';
+
+  private char generateLetter()
+  {
+    float num = Random.Range(0.0f, 100.0f);
+    for (int i = 0; i < _frequencies.Length; i++)
+    {
+      num -= _frequencies[i];
+      //Check if we've found the number
+      if (num <= 0 || i == (_frequencies.Length - 1))
+      {
+        return (char)(int_A + i);
+      }
+    }
+    return 'Z'; //This should never get hit, ever. If so, something is wrong
+  }
 
   public LetterTileController CreateLetterTile(char letter, float x, float y)
   {
@@ -26,21 +53,21 @@ public class Grid : MonoBehaviour
 
   void Start()
   {
-    letterGrid = new List<List<LetterTileController>>();
-    var columnTiles = new List<LetterTileController>();
+    xVisibleGridSize += 1; //This allow for one extra row to be offscreen
+    visibleLetterGrid = new LetterTileController[(xVisibleGridSize), yGridSize];
+    fullLetterGrid = new char[xFullGridSize, yGridSize];
 
-    for (int i = 0; i < xGridSize; i++)
+    for (int i = 0; i < xVisibleGridSize; i++) //Add one to visible grid size so there's a row offscreen
     {
       for (int j = 0; j < yGridSize; j++)
       {
-        //Random letter for now, will be english distribution eventually
-        char randomLetter = (char)('A' + Random.Range(0, 3));
-        columnTiles.Add(CreateLetterTile(randomLetter, (i * xStepSize) + xOffsetTwentyYardLine, (j * yStepSize) + yOffsetScreenBottom));
+        //char randomLetter = (char)('A' + Random.Range(0, 26));
+        char randomLetter = generateLetter();
+        visibleLetterGrid[i, j] = CreateLetterTile(randomLetter, (i * xStepSize) + xOffsetTwentyYardLine, (j * yStepSize) + yOffsetScreenBottom);
       }
-      letterGrid.Add(columnTiles);
-      columnTiles.Clear();
     }
   }
+
   //  public int ROWS = 10;
   //  public int COLUMNS = 10;
 
