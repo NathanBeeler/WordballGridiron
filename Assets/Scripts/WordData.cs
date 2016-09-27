@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 
 public class WordData : MonoBehaviour
 {
@@ -56,7 +57,7 @@ public class WordData : MonoBehaviour
   void ProcessWordSource(string data)
   {
     var words = data.Split('\n');
-    foreach (var word in words)
+    foreach (var word in words.Where(x => x != ""))
     {
       //Stores words by their first letter in a Dictionary of lists
       var c = word[0];

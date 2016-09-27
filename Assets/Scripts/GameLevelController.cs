@@ -8,12 +8,7 @@ public class GameLevelController : MonoBehaviour {
   public Grid currentGrid;
   public WordData wordData;
 
-  private List<char> _currentWord { get; set; }
-
-  public GameLevelController()
-  {
-    _currentWord = new List<char>();
-  }
+  private List<LetterTileController> selectedTiles { get; set; }
 
   //For both hike and clearwords, need to clear away selected words
   public void Hike()
@@ -31,15 +26,29 @@ public class GameLevelController : MonoBehaviour {
   public void ClearWords()
   {
     currentWordText.text = "";
+    selectedTiles.Clear();
   }
 
-  public void InputRegistered(LetterTileController tile)
+  public void AddLetter(LetterTileController lt)
   {
-    currentWordText.text += tile.letter;
+    currentWordText.text += lt.letter;
+    selectedTiles.Add(lt);
+  }
+
+  public void OnLetterSelected(GameObject tile)
+  //public void InputRegistered(LetterTileController tile)
+  {
+    LetterTileController lt = tile.GetComponent<LetterTileController>();
+    if (selectedTiles.Contains(lt))
+    {
+      ClearWords();
+    }
+    AddLetter(lt);
   }
 
   public void InitGame()
   {
+    selectedTiles = new List<LetterTileController>();
     currentWordText.text = "";
   }
 
@@ -48,7 +57,20 @@ public class GameLevelController : MonoBehaviour {
     RaycastHit2D hitInfo = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(selectionPosition), Vector2.zero);
     if (hitInfo && hitInfo.collider.tag == "LetterTile")
     {
-      InputRegistered(hitInfo.collider.GetComponent<LetterTileController>());
+      //TODO to broadcast messages to objects outside this object, need to find them -- which is fucking stupid
+      //InputRegistered(hitInfo.collider.GetComponent<LetterTileController>());
+      //SendMessage("OnLetterSelected", hitInfo.collider.GetComponent<LetterTileController>(), SendMessageOptions.DontRequireReceiver);
+      EventManager.TriggerEvent("OnLetterSelected", hitInfo.collider.gameObject);
     }
+  }
+
+  void OnEnable()
+  {
+    EventManager.StartListening("OnLetterSelected", OnLetterSelected);
+  }
+
+  void OnDisable()
+  {
+    EventManager.StopListening("OnLetterSelected", OnLetterSelected);
   }
 }

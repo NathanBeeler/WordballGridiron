@@ -39,6 +39,8 @@ public class InputController : MonoBehaviour
     //}
     else if (Input.GetMouseButtonUp(0))
     {
+      //TODO: The code below works, but trying to replace it with event
+
       game.HandleSelection(Input.mousePosition);
     }
     //else

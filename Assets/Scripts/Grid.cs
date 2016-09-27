@@ -9,7 +9,7 @@ public class Grid : MonoBehaviour
   public int yGridSize;
   public float xStepSize;
   public float yStepSize;
-  public float xOffsetTwentyYardLine;
+  public float xLeftGoalLine;
   public float yOffsetScreenBottom;
   public LetterTileController letterTilePrefab;
   public GameLevelController game;
@@ -25,7 +25,7 @@ public class Grid : MonoBehaviour
     2.758f, 0.978f, 2.360f, 0.150f, 1.974f,
     0.074f
   };
-  private int int_A = (int)'A';
+  private int int_A = 'A';
 
   private char generateLetter()
   {
@@ -42,11 +42,13 @@ public class Grid : MonoBehaviour
     return 'Z'; //This should never get hit, ever. If so, something is wrong
   }
 
-  public LetterTileController CreateLetterTile(char letter, float x, float y)
+  public LetterTileController CreateLetterTile(char letter, int x, int y, int offsetLinesFromLeft)
   {
-    LetterTileController lt = Instantiate(letterTilePrefab, new Vector3(x, y, 0), transform.rotation) as LetterTileController;
-    lt.transform.position.Set(x, y, 0);
-    lt.SetLetterTileLetter(letter);
+    float newX = ((x + offsetLinesFromLeft) * xStepSize) + xLeftGoalLine;
+    float newY = (y * yStepSize) + yOffsetScreenBottom;
+    LetterTileController lt = Instantiate(letterTilePrefab, new Vector3(newX, newY, 0), transform.rotation) as LetterTileController;
+    lt.transform.position.Set(newX, newY, 0);
+    lt.SetLetterTileLetter(letter, x, y);
     //lt.game = game;
     return lt;
   }
@@ -57,140 +59,46 @@ public class Grid : MonoBehaviour
     visibleLetterGrid = new LetterTileController[(xVisibleGridSize), yGridSize];
     fullLetterGrid = new char[xFullGridSize, yGridSize];
 
-    for (int i = 0; i < xVisibleGridSize; i++) //Add one to visible grid size so there's a row offscreen
+    fillFullGrid();
+    createInitialVisibleGrid(6); //Fills visible grid full of letter tiles game objects
+  }
+
+  private void fillFullGrid()
+  {
+    for (int i = 0; i < xFullGridSize; i++)
     {
       for (int j = 0; j < yGridSize; j++)
       {
-        //char randomLetter = (char)('A' + Random.Range(0, 26));
-        char randomLetter = generateLetter();
-        visibleLetterGrid[i, j] = CreateLetterTile(randomLetter, (i * xStepSize) + xOffsetTwentyYardLine, (j * yStepSize) + yOffsetScreenBottom);
+        fullLetterGrid[i, j] = generateLetter();
       }
     }
   }
 
-  //  public int ROWS = 10;
-  //  public int COLUMNS = 10;
+  private void createInitialVisibleGrid(int offsetLinesFromLeft)
+  {
+    for (int i = 0; i < xVisibleGridSize; i++) //Add one to visible grid size so there's a row offscreen
+    {
+      for (int j = 0; j < yGridSize; j++)
+      {
+        visibleLetterGrid[i, j] = CreateLetterTile(fullLetterGrid[i + offsetLinesFromLeft, j], i, j, offsetLinesFromLeft);
+      }
+    }
+  }
 
-  //  public GameObject letterTileGO;
+  public void OnLetterSelected(GameObject tile)
+  //public void InputRegistered(LetterTileController tile)
+  {
+    LetterTileController lt = tile.GetComponent<LetterTileController>();
+    Debug.Log(lt.letter.ToString());
+  }
 
-  //  public float GRID_OFFSET_X = 6.4f;
-  //  public float GRID_OFFSET_Y = 10f;
+  void OnEnable()
+  {
+    EventManager.StartListening("OnLetterSelected", OnLetterSelected);
+  }
 
-  //  [HideInInspector]
-  //  public List<LetterTileController> tiles;
-
-  //  [HideInInspector]
-  //  public List<List<LetterTileController>> gridTiles;
-
-  //  private string wordSource;
-
-  //  private int wordSourceIndex;
-
-  //  private struct Cell
-  //  {
-  //    public int row;
-  //    public int column;
-  //  }
-
-  //  private List<Cell> gridIndexes;
-
-
-  //  void Awake()
-  //  {
-  //    BuildIndexes();
-  //  }
-
-  //  public void BuildGrid()
-  //  {
-  //    var wordData = GetComponent<WordData>();
-  //    wordSource = wordData.GetRandomWord();
-
-  //    foreach (var index in gridIndexes)
-  //    {
-  //      gridTiles[index.column][index.row].SetTileData(wordSource[wordSourceIndex]);
-  //      wordSourceIndex++;
-  //      if (wordSourceIndex == wordSource.Length)
-  //      {
-  //        wordSource = wordData.GetRandomWord();
-  //        wordSourceIndex = 0;
-  //      }
-  //    }
-  //  }
-
-  //  public void CollapseGrid()
-  //  {
-  //    for (int column = 0; column < COLUMNS; column++)
-  //    {
-
-  //      var columnList = gridTiles[column];
-  //      var newColumn = new List<LetterTile>(ROWS);
-  //      var removedCnt = 0;
-  //      var row = ROWS - 1;
-  //      var removedTiles = columnList.FindAll((e) => { return (!e.gameObject.activeSelf); });
-  //      removedTiles.Reverse();
-  //      var totalRemoved = removedTiles.Count;
-
-  //      for (var i = columnList.Count - 1; i >= 0; i--)
-  //      {
-  //        if (!columnList[i].gameObject.activeSelf)
-  //        {
-  //          columnList[i].row = removedCnt;
-  //          var p = columnList[i].transform.position;
-  //          p.y = columnList[0].transform.position.y + (totalRemoved - removedCnt) * 2.4f;
-  //          columnList[i].transform.position = p;
-  //          removedCnt++;
-  //        }
-  //        else
-  //        {
-  //          columnList[i].row = row;
-  //          row--;
-  //          newColumn.Insert(0, columnList[i]);
-  //        }
-  //      }
-
-  //      //append removed tiles
-  //      newColumn.InsertRange(0, removedTiles);
-
-  //      //update tiles
-  //      foreach (var tile in newColumn)
-  //      {
-  //        tile.UpdateData();
-  //      }
-
-  //      gridTiles[column] = newColumn;
-  //    }
-  //  }
-
-  //  private void BuildShuffledIndexes()
-  //  {
-  //    tiles = new List<LetterTileController>();
-  //    gridTiles = new List<List<LetterTileController>>();
-
-  //    gridIndexes = new List<Cell>();
-  //    Cell indexer;
-  //    for (int column = 0; column < COLUMNS; column++)
-  //    {
-
-  //      var columnTiles = new List<LetterTileController>();
-
-  //      for (int row = 0; row < ROWS; row++)
-  //      {
-  //        indexer = new Cell();
-  //        indexer.column = column;
-  //        indexer.row = row;
-  //        gridIndexes.Add(indexer);
-
-  //        var item = Instantiate(letterTileGO) as GameObject;
-  //        var tile = item.GetComponent<LetterTileController>();
-  //        tile.SetTilePosition(this, column, row);
-  //        tile.transform.parent = gameObject.transform;
-  //        tiles.Add(tile);
-  //        columnTiles.Add(tile);
-  //      }
-  //      gridTiles.Add(columnTiles);
-  //    }
-
-  //    WordData.ShuffleList(gridIndexes);
-  //  }
-
+  void OnDisable()
+  {
+    EventManager.StopListening("OnLetterSelected", OnLetterSelected);
+  }
 }
