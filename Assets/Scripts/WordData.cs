@@ -35,7 +35,8 @@ public class WordData : MonoBehaviour
   void Start()
   {
     wordsMap = new Dictionary<char, List<string>>();
-    StartCoroutine("LoadWordData");
+    //StartCoroutine("LoadWordData");
+    LoadWordData();
   }
 
   void LoadWordData()

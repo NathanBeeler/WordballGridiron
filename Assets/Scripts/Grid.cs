@@ -27,7 +27,7 @@ public class Grid : MonoBehaviour
   };
   private int int_A = 'A';
 
-  private char generateLetter()
+  private char GenerateLetter()
   {
     float num = Random.Range(0.0f, 100.0f);
     for (int i = 0; i < _frequencies.Length; i++)
@@ -42,13 +42,14 @@ public class Grid : MonoBehaviour
     return 'Z'; //This should never get hit, ever. If so, something is wrong
   }
 
-  public LetterTileController CreateLetterTile(char letter, int x, int y, int offsetLinesFromLeft)
+  public LetterTileController CreateLetterTile(char letter, int x, int y)
   {
-    float newX = ((x + offsetLinesFromLeft) * xStepSize) + xLeftGoalLine;
+    float newX = ((x + game.currentLeftSideOffset) * xStepSize) + xLeftGoalLine;
     float newY = (y * yStepSize) + yOffsetScreenBottom;
     LetterTileController lt = Instantiate(letterTilePrefab, new Vector3(newX, newY, 0), transform.rotation) as LetterTileController;
     lt.transform.position.Set(newX, newY, 0);
     lt.SetLetterTileLetter(letter, x, y);
+    //lt.MakeSelectable((x + game.currentLeftSideOffset) <= game.currentLineOfScrimmage); //Letter is selectable if x is left of current line of scrimmage?
     //lt.game = game;
     return lt;
   }
@@ -59,46 +60,66 @@ public class Grid : MonoBehaviour
     visibleLetterGrid = new LetterTileController[(xVisibleGridSize), yGridSize];
     fullLetterGrid = new char[xFullGridSize, yGridSize];
 
-    fillFullGrid();
-    createInitialVisibleGrid(6); //Fills visible grid full of letter tiles game objects
+    FillFullGrid();
+    CreateInitialVisibleGrid(game.currentLineOfScrimmage - 2); //Fills visible grid full of letter tiles game objects
   }
 
-  private void fillFullGrid()
+  private void FillFullGrid()
   {
     for (int i = 0; i < xFullGridSize; i++)
     {
       for (int j = 0; j < yGridSize; j++)
       {
-        fullLetterGrid[i, j] = generateLetter();
+        fullLetterGrid[i, j] = GenerateLetter();
       }
     }
   }
 
-  private void createInitialVisibleGrid(int offsetLinesFromLeft)
+  public void OnResetGrid(GameObject go)
+  {
+    foreach (LetterTileController lt in visibleLetterGrid)
+    {
+      lt.MakeCurrent(false);
+      lt.MakeSelectable(lt.gridPositionX + game.currentLeftSideOffset <= game.currentLineOfScrimmage);
+    }
+  }
+
+  private void CreateInitialVisibleGrid(int offsetLinesFromLeft)
   {
     for (int i = 0; i < xVisibleGridSize; i++) //Add one to visible grid size so there's a row offscreen
     {
       for (int j = 0; j < yGridSize; j++)
       {
-        visibleLetterGrid[i, j] = CreateLetterTile(fullLetterGrid[i + offsetLinesFromLeft, j], i, j, offsetLinesFromLeft);
+        visibleLetterGrid[i, j] = CreateLetterTile(fullLetterGrid[i + offsetLinesFromLeft, j], i, j);
       }
     }
-  }
-
-  public void OnLetterSelected(GameObject tile)
-  //public void InputRegistered(LetterTileController tile)
-  {
-    LetterTileController lt = tile.GetComponent<LetterTileController>();
-    Debug.Log(lt.letter.ToString());
+    EventManager.TriggerEvent("ResetGrid", gameObject);
   }
 
   void OnEnable()
   {
-    EventManager.StartListening("OnLetterSelected", OnLetterSelected);
+    EventManager.StartListening("ResetGrid", OnResetGrid);
   }
 
   void OnDisable()
   {
-    EventManager.StopListening("OnLetterSelected", OnLetterSelected);
+    EventManager.StopListening("ResetGrid", OnResetGrid);
   }
+
+  //public void OnLetterSelected(GameObject tile)
+  ////public void InputRegistered(LetterTileController tile)
+  //{
+  //  LetterTileController lt = tile.GetComponent<LetterTileController>();
+  //  Debug.Log(lt.letter.ToString());
+  //}
+
+  //void OnEnable()
+  //{
+  //  EventManager.StartListening("OnLetterSelected", OnLetterSelected);
+  //}
+
+  //void OnDisable()
+  //{
+  //  EventManager.StopListening("OnLetterSelected", OnLetterSelected);
+  //}
 }
