@@ -9,29 +9,28 @@ public class GameLevelController : MonoBehaviour {
   public Text messageText;
   //public Grid currentGrid;
   public WordData wordData;
+  public int WaitSeconds = 3;
 
   [HideInInspector]
   public int currentLineOfScrimmage;
   [HideInInspector]
   public int currentLeftSideOffset;
-
-  private List<LetterTileController> selectedTiles { get; set; }
+  [HideInInspector]
+  public List<LetterTileController> selectedTiles { get; set; }
 
   //For both hike and clearwords, need to clear away selected words
   public void Hike()
   {
     if (wordData.IsWordValid(currentWordText.text.ToLower()))
     {
-      //TODO change these to be a gui element that isn't the current selected word
       messageText.text = "Correct!";
+      EventManager.TriggerEvent("CorrectWordEntered", gameObject);
     } 
     else
     {
-      messageText.text = "WRONG!";
+      messageText.text = "Invalid Word";
     }
-    //selectedTiles.Clear(); //TODO: This will have to trigger all the letters cascading (from full grid first) and animation
     ClearWords();
-    //EventManager.TriggerEvent("ResetGrid", gameObject);
   }
 
   public void ClearWords()
@@ -88,10 +87,23 @@ public class GameLevelController : MonoBehaviour {
     currentLeftSideOffset = currentLineOfScrimmage - 2;
   }
 
+  private void OnReturnToReady (GameObject go)
+  {
+    messageText.text = "";
+  }
+
   public void InitGame()
   {
     //This is called when word data is loaded
   }
+
+  //public void ActivateSelected(bool isActive)
+  //{
+  //  foreach (LetterTileController lt in selectedTiles)
+  //  {
+  //    lt.gameObject.SetActive(isActive);
+  //  }
+  //}
 
   public void HandleSelection(Vector2 selectionPosition)
   {
@@ -109,10 +121,12 @@ public class GameLevelController : MonoBehaviour {
   void OnEnable()
   {
     EventManager.StartListening("LetterSelected", OnLetterSelected);
+    EventManager.StartListening("ReturnToReady", OnReturnToReady);
   }
 
   void OnDisable()
   {
     EventManager.StopListening("LetterSelected", OnLetterSelected);
+    EventManager.StartListening("ReturnToReady", OnReturnToReady);
   }
 }

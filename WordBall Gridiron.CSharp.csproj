@@ -76,6 +76,7 @@
     <Compile Include="Assets\Scripts\InputController.cs" />
     <Compile Include="Assets\Scripts\LetterTileController.cs" />
     <Compile Include="Assets\Scripts\Rotator.cs" />
+    <Compile Include="Assets\Scripts\SmokePuffScript.cs" />
     <Compile Include="Assets\Scripts\WordData.cs" />
     <Compile Include="Assets\Scripts\WordGame.cs" />
     <Compile Include="Assets\Scripts\iTween.cs" />

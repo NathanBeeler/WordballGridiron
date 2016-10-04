@@ -11,7 +11,7 @@ public class LetterTileController : MonoBehaviour {
   [HideInInspector]
   public char letter;
   [HideInInspector]
-  public int gridPositionX;
+  public int gridPositionX; //Visible grid coordinates, relative to 0,0
   [HideInInspector]
   public int gridPositionY;
   [HideInInspector]
@@ -19,13 +19,39 @@ public class LetterTileController : MonoBehaviour {
   [HideInInspector]
   public bool isCurrent;
 
+  private bool _moveLetter = false;
+  private float _newXPosition;
 
-  public void SetLetterTileLetter (char chosenLetter, int x, int y)
+  public void SetToMoveToNewXPosition(float newX)
+  {
+    _moveLetter = true; //This will cause the letter to animate the next time AnimateLetterMovement is raised
+    _newXPosition = newX;
+  }
+
+  public void OnAnimateLetterMovement(GameObject go)
+  {
+    if (_moveLetter)
+    {
+      //iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "speed", 40.0f, "easetype", iTween.EaseType.easeOutCirc));
+      iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "delay", 0.1f, "time", 2.0f, "easetype", iTween.EaseType.easeOutCirc));
+      _moveLetter = false;
+    }
+  }
+
+  public void SetLetterTileLetter (char chosenLetter)
   {
     Sprite newLetterSprite = Resources.Load<Sprite>("Sprites/Letter" + chosenLetter);
     letterSprite.sprite = newLetterSprite;
     letter = chosenLetter;
+  }
+
+  public void SetLetterTilePositionX(int x)
+  {
     gridPositionX = x;
+  }
+
+  public void SetLetterTilePositioY(int y)
+  {
     gridPositionY = y;
   }
 
@@ -75,16 +101,12 @@ public class LetterTileController : MonoBehaviour {
   void OnEnable()
   {
     EventManager.StartListening("ValidLetterSelected", OnValidLetterSelected);
+    EventManager.StartListening("AnimateLetterMovement", OnAnimateLetterMovement);
   }
 
   void OnDisable()
   {
     EventManager.StopListening("ValidLetterSelected", OnValidLetterSelected);
+    EventManager.StopListening("AnimateLetterMovement", OnAnimateLetterMovement);
   }
-
-  ////Really want this on mouse up, but that oddly still selects the collision where the mouse down occurred
-  //void OnMouseDown()
-  //{
-  //  game.InputRegistered(letter);
-  //}
 }
