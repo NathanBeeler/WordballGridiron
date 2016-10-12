@@ -6,7 +6,6 @@ using System;
 public class Grid : MonoBehaviour
 {
   public int xVisibleGridSize;
-  public int xFullGridSize;
   public int yGridSize;
   public float xStepSize;
   public float yStepSize;
@@ -16,6 +15,8 @@ public class Grid : MonoBehaviour
   public ParticleSystem smokePuffPrefab;
   public GameLevelController game;
 
+  private int _currentLeftSideOfGrid;
+  private int lettersAnimating;
   private LetterTileController[,] visibleLetterGrid;
   private char[,] fullLetterGrid;
   private float[] _frequencies =
@@ -46,13 +47,13 @@ public class Grid : MonoBehaviour
 
   public LetterTileController CreateLetterTile(char letter, int x, int y)
   {
-    float newX = ((x + game.currentLeftSideOffset) * xStepSize) + xLeftGoalLine;
+    float newX = ((x + _currentLeftSideOfGrid) * xStepSize) + xLeftGoalLine;
     float newY = (y * yStepSize) + yOffsetScreenBottom;
     LetterTileController lt = Instantiate(letterTilePrefab, new Vector3(newX, newY, 0), transform.rotation) as LetterTileController;
     lt.transform.position.Set(newX, newY, 0);
     lt.SetLetterTileLetter(letter);
     lt.SetLetterTilePositionX(x);
-    lt.SetLetterTilePositioY(y);
+    lt.SetLetterTilePositionY(y);
     //lt.MakeSelectable((x + game.currentLeftSideOffset) <= game.currentLineOfScrimmage); //Letter is selectable if x is left of current line of scrimmage?
     //lt.game = game;
     return lt;
@@ -62,17 +63,18 @@ public class Grid : MonoBehaviour
   {
     xVisibleGridSize += 1; //This allow for one extra row to be offscreen
     visibleLetterGrid = new LetterTileController[(xVisibleGridSize), yGridSize];
-    fullLetterGrid = new char[xFullGridSize, yGridSize];
+    fullLetterGrid = new char[game.goalLine + 3, yGridSize];
+    _currentLeftSideOfGrid = game.currentLeftSideOffset; //Rolling my own here so it's internal and doesn't change until grid moves
 
     FillFullGrid();
-    CreateInitialVisibleGrid(game.currentLineOfScrimmage - 2); //Fills visible grid full of letter tiles game objects
+    CreateInitialVisibleGrid(game.currentLeftSideOffset); //Fills visible grid full of letter tiles game objects
   }
 
   private void FillFullGrid()
   {
-    for (int i = 0; i < xFullGridSize; i++)
+    for (int i = 0; i < fullLetterGrid.GetLength(0); i++)
     {
-      for (int j = 0; j < yGridSize; j++)
+      for (int j = 0; j < fullLetterGrid.GetLength(1); j++)
       {
         fullLetterGrid[i, j] = GenerateLetter();
       }
@@ -84,7 +86,9 @@ public class Grid : MonoBehaviour
     foreach (LetterTileController lt in visibleLetterGrid)
     {
       lt.MakeCurrent(false);
-      lt.MakeSelectable(lt.gridPositionX + game.currentLeftSideOffset <= game.currentLineOfScrimmage);
+      //Changing logic so that all letters are open instead of just those from the LoS back
+      //lt.MakeSelectable(lt.gridPositionX + game.currentLeftSideOffset <= game.currentLineOfScrimmage);
+      lt.MakeSelectable(true);
     }
   }
 
@@ -95,17 +99,24 @@ public class Grid : MonoBehaviour
     //1. Start smoke animation on selected letters
     CreateSmokePuffs(game.selectedTiles);
 
-    //2. Hide selected letters
-    //No reason to deactivate letters, as they will just be moved
-    //game.ActivateSelected(false);
-
-    //3. Update full grid
+    //2. Update full grid
     RemoveSelectedFromGrids(game.selectedTiles);
-    //4. Move selected letters
 
-    //5. Animate letters to fill in grid
+    //3. Move selected letters
+
+    //4. Animate letters to fill in grid
     EventManager.TriggerEvent("AnimateLetterMovement", gameObject);
 
+  }
+
+  private void OnLetterAnimationBegun(GameObject letter)
+  {
+    lettersAnimating++;
+  }
+
+  private void OnLetterAnimationComplete(GameObject letter)
+  {
+    lettersAnimating--;
   }
 
   private void CreateSmokePuffs(List<LetterTileController> selectedTiles)
@@ -113,7 +124,7 @@ public class Grid : MonoBehaviour
     foreach (LetterTileController lt in selectedTiles)
     {
       ParticleSystem ps = Instantiate(smokePuffPrefab, lt.transform.position, transform.rotation) as ParticleSystem;
-      StartCoroutine(ReturnToReadyAfterWait(game.WaitSeconds));
+      StartCoroutine(ReturnToReadyAfterWait(game.waitSeconds));
     }
   }
 
@@ -175,7 +186,7 @@ public class Grid : MonoBehaviour
         else if (i == xVisibleGridSize - 1)
         {
           visibleLetterGrid[i, row] = currentLetter;
-          currentLetter.SetLetterTileLetter(fullLetterGrid[i, row]);
+          currentLetter.SetLetterTileLetter(fullLetterGrid[i + game.currentLeftSideOffset, row]);
           currentLetter.SetLetterTilePositionX(i);
           currentLetter.SetToMoveToNewXPosition(((xVisibleGridSize + game.currentLeftSideOffset - 1) * xStepSize) + xLeftGoalLine);
         }
@@ -190,6 +201,71 @@ public class Grid : MonoBehaviour
     fullLetterGrid[xVisibleGridSize + game.currentLeftSideOffset, row] = GenerateLetter();
   }
 
+  public void MoveGridRowForward()
+  {
+    LetterTileController temp;
+    _currentLeftSideOfGrid++;
+
+    for (int row = 0; row < yGridSize; row++)
+    {
+      //Track the first letter in each row before it is overwritten
+      temp = visibleLetterGrid[0, row];
+
+      for (int col = 0; col < xVisibleGridSize; col++)
+      {
+
+        //For each row up to the end copy the next letter forward
+        if (col < xVisibleGridSize - 1)
+        {
+          visibleLetterGrid[col, row] = visibleLetterGrid[col + 1, row];
+          visibleLetterGrid[col, row].SetLetterTilePositionX(col);
+        }
+        //For the last letter in the row put the temp back and fill from full letter grid
+        else
+        {
+          visibleLetterGrid[col, row] = temp;
+          temp.SetLetterTileLetter(fullLetterGrid[col + _currentLeftSideOfGrid, row]);
+          Vector3 pos = visibleLetterGrid[col, row].gameObject.transform.position;
+          pos.x = ((col + _currentLeftSideOfGrid) * xStepSize) + xLeftGoalLine;
+          temp.gameObject.transform.position = pos;
+          temp.SetLetterTilePositionX(col);
+        }
+      }
+    }
+  }
+
+  public void MoveGridRowBackwards()
+  {
+    LetterTileController temp;
+    _currentLeftSideOfGrid--;
+
+    for (int row = 0; row < yGridSize; row++)
+    {
+      //Track the last letter in each row before it is overwritten
+      temp = visibleLetterGrid[xVisibleGridSize - 1, row];
+
+      for (int col = xVisibleGridSize - 1; col >= 0; col--)
+      {
+        //For each row up to the end copy the next letter backwards
+        if (col > 0)
+        {
+          visibleLetterGrid[col, row] = visibleLetterGrid[col - 1, row];
+          visibleLetterGrid[col, row].SetLetterTilePositionX(col);
+        }
+        //For the last letter in the row put the temp back and fill from full letter grid
+        else
+        {
+          visibleLetterGrid[col, row] = temp;
+          temp.SetLetterTileLetter(fullLetterGrid[col + _currentLeftSideOfGrid, row]);
+          Vector3 pos = visibleLetterGrid[col, row].gameObject.transform.position;
+          pos.x = ((col + _currentLeftSideOfGrid) * xStepSize) + xLeftGoalLine;
+          temp.gameObject.transform.position = pos;
+          temp.SetLetterTilePositionX(col);
+        }
+      }
+    }
+  }
+
   private void CreateInitialVisibleGrid(int offsetLinesFromLeft)
   {
     for (int i = 0; i < xVisibleGridSize; i++)
@@ -202,15 +278,25 @@ public class Grid : MonoBehaviour
     EventManager.TriggerEvent("ResetGrid", gameObject);
   }
 
+  public bool IsGridAnimating()
+  {
+    return lettersAnimating > 0; 
+  }
+
   void OnEnable()
   {
     EventManager.StartListening("ResetGrid", OnResetGrid);
     EventManager.StartListening("CorrectWordEntered", OnCorrectWordEntered);
+    EventManager.StartListening("LetterAnimationBegun", OnLetterAnimationBegun);
+    EventManager.StartListening("LetterAnimationComplete", OnLetterAnimationComplete);
   }
 
   void OnDisable()
   {
     EventManager.StopListening("ResetGrid", OnResetGrid);
     EventManager.StopListening("CorrectWordEntered", OnCorrectWordEntered);
+    EventManager.StopListening("LetterAnimationBegun", OnLetterAnimationBegun);
+    EventManager.StopListening("LetterAnimationComplete", OnLetterAnimationComplete);
   }
 }
+

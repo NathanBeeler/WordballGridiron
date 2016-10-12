@@ -32,10 +32,17 @@ public class LetterTileController : MonoBehaviour {
   {
     if (_moveLetter)
     {
+      EventManager.TriggerEvent("LetterAnimationBegun", gameObject);
       //iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "speed", 40.0f, "easetype", iTween.EaseType.easeOutCirc));
-      iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "delay", 0.1f, "time", 2.0f, "easetype", iTween.EaseType.easeOutCirc));
+      iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "delay", 0.1f, "time", 2.0f, "easetype", iTween.EaseType.easeOutCirc, 
+                                            "oncomplete", "AnimateComplete", "oncompletetarget", gameObject));
       _moveLetter = false;
     }
+  }
+
+  private void AnimateComplete()
+  {
+    EventManager.TriggerEvent("LetterAnimationComplete", gameObject);
   }
 
   public void SetLetterTileLetter (char chosenLetter)
@@ -50,7 +57,7 @@ public class LetterTileController : MonoBehaviour {
     gridPositionX = x;
   }
 
-  public void SetLetterTilePositioY(int y)
+  public void SetLetterTilePositionY(int y)
   {
     gridPositionY = y;
   }
