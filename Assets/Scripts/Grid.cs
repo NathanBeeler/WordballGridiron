@@ -102,9 +102,7 @@ public class Grid : MonoBehaviour
     //2. Update full grid
     RemoveSelectedFromGrids(game.selectedTiles);
 
-    //3. Move selected letters
-
-    //4. Animate letters to fill in grid
+    //3. Animate letters to fill in grid
     EventManager.TriggerEvent("AnimateLetterMovement", gameObject);
 
   }

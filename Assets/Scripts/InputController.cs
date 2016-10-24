@@ -5,6 +5,7 @@ public class InputController : MonoBehaviour
 {
 
   public GameLevelController game;
+  private bool _buttonClick = false;
 
   void Update()
   {
@@ -21,7 +22,15 @@ public class InputController : MonoBehaviour
       //else
       if (touch.phase == TouchPhase.Canceled || touch.phase == TouchPhase.Ended)
       {
-        game.HandleSelection(touch.position);
+        //Don't handle if this is a button click touch, because it's already been handled by the event
+        if (_buttonClick)
+        {
+          _buttonClick = false;
+        }
+        else
+        {
+          game.HandleSelection(touch.position);
+        }
       }
       //else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
       //{
@@ -39,12 +48,34 @@ public class InputController : MonoBehaviour
     //}
     else if (Input.GetMouseButtonUp(0))
     {
-      //TODO: The code below works, but trying to replace it with event
-
-      game.HandleSelection(Input.mousePosition);
+      //Don't handle if this is a button click touch, because it's already been handled by the event
+      if (_buttonClick)
+      {
+        _buttonClick = false;
+      }
+      else
+      {
+        //TODO replace direct calls with raised event
+        game.HandleSelection(Input.mousePosition);
+      }
     }
     //else
     //  game.HandleTouchMove(Input.mousePosition);
 
+  }
+
+  private void OnButtonClick(GameObject go)
+  {
+    _buttonClick = true;
+  }
+
+  void OnEnable()
+  {
+    EventManager.StartListening("ButtonClick", OnButtonClick);
+  }
+
+  void OnDisable()
+  {
+    EventManager.StopListening("ButtonClick", OnButtonClick);
   }
 }

@@ -31,6 +31,7 @@ public class GameLevelController : MonoBehaviour {
   public enum State
   {
     Waiting,
+    IncorrectAnswer,
     AnimatingLetters,
     AnimatingCameraAndGrid,
     SettingUpNextPlay
@@ -52,7 +53,15 @@ public class GameLevelController : MonoBehaviour {
     {
       case State.Waiting:
         {
-          //Do nothing
+          break;
+        }
+      case State.IncorrectAnswer:
+        {
+          //Waiting for a screen touch, though could put timer element in
+          if (messageText.text == "")
+          {
+            currentState = State.Waiting;
+          }
           break;
         }
       case State.AnimatingLetters:
@@ -83,8 +92,10 @@ public class GameLevelController : MonoBehaviour {
   }
 
   //For both hike and clearwords, need to clear away selected words
-  public void Hike()
+  public void HikeButtonClick()
   {
+    //Let InputController know not to respond to click event
+    EventManager.TriggerEvent("ButtonClick", gameObject);
     if (wordData.IsWordValid(currentWordText.text.ToLower()))
     {
       messageText.text = "Correct!";
@@ -93,8 +104,17 @@ public class GameLevelController : MonoBehaviour {
     } 
     else
     {
+      currentState = State.IncorrectAnswer;
       messageText.text = "Invalid Word";
+      EventManager.TriggerEvent("IncorrectWordEntered", gameObject);
     }
+  }
+
+  public void ClearButtonClick()
+  {
+    //Let InputController know not to respond to click event
+    EventManager.TriggerEvent("ButtonClick", gameObject);
+    ClearWords();
   }
 
   public void ClearWords()
@@ -229,6 +249,14 @@ public class GameLevelController : MonoBehaviour {
   public void HandleSelection(Vector2 selectionPosition)
   {
     RaycastHit2D hitInfo = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(selectionPosition), Vector2.zero);
+    //Don't want to handle button clicks here
+    if (currentState == State.IncorrectAnswer)
+    {
+      ClearWords();
+      messageText.text = "";
+      return;
+    }
+
     if (hitInfo && hitInfo.collider.tag == "LetterTile")
     {
       messageText.text = "";
