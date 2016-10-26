@@ -72,10 +72,12 @@ public class WordData : MonoBehaviour
 
   public bool IsWordValid(string wordToTest)
   {
-    List<string> wordsByLetter;
-    if (wordsMap.TryGetValue(wordToTest[0], out wordsByLetter))
-      return wordsByLetter.Contains(wordToTest);
+    //TODO change all this back for real game
+    return true;
+    //List<string> wordsByLetter;
+    //if (wordsMap.TryGetValue(wordToTest[0], out wordsByLetter))
+    //  return wordsByLetter.Contains(wordToTest);
 
-    return false;
+    //return false;
   }
 }

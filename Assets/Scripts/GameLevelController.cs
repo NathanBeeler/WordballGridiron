@@ -214,9 +214,6 @@ public class GameLevelController : MonoBehaviour {
 
   private void OnNextPlay(GameObject go)
   {
-    ////Move Camera
-    //CallCameraMoveAndUpdateGrid(lineOfScrimmageChange);
-
     //Clear out word overlay and selected word
     ClearWords();
 

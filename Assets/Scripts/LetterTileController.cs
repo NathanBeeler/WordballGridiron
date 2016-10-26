@@ -34,7 +34,7 @@ public class LetterTileController : MonoBehaviour {
     {
       EventManager.TriggerEvent("LetterAnimationBegun", gameObject);
       //iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "speed", 40.0f, "easetype", iTween.EaseType.easeOutCirc));
-      iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "delay", 0.1f, "time", 2.0f, "easetype", iTween.EaseType.easeOutCirc, 
+      iTween.MoveTo(gameObject, iTween.Hash("x", _newXPosition, "delay", 0.1f, "time", 1.0f, "easetype", iTween.EaseType.easeOutCirc, 
                                             "oncomplete", "AnimateComplete", "oncompletetarget", gameObject));
       _moveLetter = false;
     }
